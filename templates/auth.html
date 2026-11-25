@@ -1,0 +1,5 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{{ mode }} | PixelCraft</title><link rel="stylesheet" href="{{ url_for('static',filename='style.css') }}"></head>
+<body class="auth-body"><div class="auth-card"><div class="brand"><span class="brand-icon">✦</span> PixelCraft Studio</div><h1>{{ mode }}</h1><p class="muted">Create something beautiful today.</p>
+{% if error %}<div class="error">{{ error }}</div>{% endif %}
+<form method="post"><label>Username</label><input name="username" minlength="3" required placeholder="Choose a username"><label>Password</label><input name="password" type="password" minlength="4" required placeholder="Enter password"><button class="primary full" type="submit">{{ mode }}</button></form>
+<p class="switch">{% if mode == 'Login' %}New here? <a href="{{ url_for('signup') }}">Create account</a>{% else %}Already registered? <a href="{{ url_for('login') }}">Login</a>{% endif %}</p></div></body></html>

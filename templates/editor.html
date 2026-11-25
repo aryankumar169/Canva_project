@@ -1,0 +1,20 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>PixelCraft Studio</title><link rel="stylesheet" href="{{ url_for('static',filename='style.css') }}"><script src="https://cdn.jsdelivr.net/npm/fabric@5.3.0/dist/fabric.min.js"></script></head>
+<body class="editor-body">
+<header class="topbar"><div class="brand"><span class="brand-icon">✦</span> PixelCraft Studio</div><input id="designTitle" class="title-input" value="{{ title if title else 'Untitled Design' }}" aria-label="Design title"><div class="top-actions"><span class="welcome">Hi, {{ username }}</span><button class="outline" onclick="saveDesign()">Save</button><button class="primary" onclick="exportPNG()">Download PNG</button><a class="logout" href="{{ url_for('logout') }}">Logout</a></div></header>
+<div class="workspace"><aside class="sidebar"><h3>Tools</h3><button onclick="addText()">＋ Add text</button><button onclick="addRect()">▭ Rectangle</button><button onclick="addCircle()">◯ Circle</button><label class="upload-btn">▧ Upload image<input type="file" id="imageUpload" accept="image/*" hidden></label><hr><h3>Design</h3><label>Canvas background<input type="color" id="bgColor" value="#ffffff"></label><button class="outline" onclick="deleteSelected()">Delete selected</button><p class="hint">Tip: Select an element and drag it on the canvas. Double-click text to edit.</p>
+{% if designs %}<hr><h3>My saved designs</h3>{% for d in designs %}<a class="saved-design" href="{{ url_for('load_design',design_id=d.id) }}">{{ d.title }}</a>{% endfor %}{% endif %}
+</aside><main class="canvas-area"><div class="canvas-wrap"><canvas id="designCanvas" width="900" height="600"></canvas></div><p class="canvas-note">Select tools on the left to create your design.</p></main></div>
+<script>
+const canvas = new fabric.Canvas('designCanvas',{backgroundColor:'#ffffff',preserveObjectStacking:true});
+let currentId = {{ design_id|default('null')|tojson }};
+const initial = {{ initial_design|default(none)|tojson }};
+function addText(){const t=new fabric.IText('Double-click to edit',{left:120,top:120,fontSize:34,fill:'#222222',fontFamily:'Arial'});canvas.add(t).setActiveObject(t);canvas.renderAll();}
+function addRect(){const r=new fabric.Rect({left:150,top:150,width:180,height:110,fill:'#8b5cf6',rx:8,ry:8});canvas.add(r).setActiveObject(r);canvas.renderAll();}
+function addCircle(){const c=new fabric.Circle({left:180,top:160,radius:60,fill:'#22c55e'});canvas.add(c).setActiveObject(c);canvas.renderAll();}
+document.getElementById('bgColor').addEventListener('input',e=>{canvas.setBackgroundColor(e.target.value,canvas.renderAll.bind(canvas));});
+document.getElementById('imageUpload').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const reader=new FileReader();reader.onload=ev=>fabric.Image.fromURL(ev.target.result,img=>{img.scaleToWidth(280);img.set({left:100,top:100});canvas.add(img).setActiveObject(img);});reader.readAsDataURL(f);});
+function deleteSelected(){const o=canvas.getActiveObject();if(o){canvas.remove(o);canvas.discardActiveObject();canvas.renderAll();}}
+function saveDesign(){const payload={id:currentId,title:document.getElementById('designTitle').value,design:canvas.toJSON()};fetch('/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).then(r=>r.json()).then(d=>{if(d.ok){currentId=d.id;alert('Design saved successfully!');location.href='/editor';}else alert(d.error||'Could not save design.');}).catch(()=>alert('Save failed. Please check the server connection.'));}
+function exportPNG(){const a=document.createElement('a');a.download=(document.getElementById('designTitle').value||'pixelcraft-design')+'.png';a.href=canvas.toDataURL({format:'png',multiplier:1});a.click();}
+if(initial){canvas.loadFromJSON(initial,()=>canvas.renderAll());}
+</script></body></html>
